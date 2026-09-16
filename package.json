@@ -1,0 +1,16 @@
+{
+  "name": "sousuo",
+  "version": "0.1.0",
+  "private": true,
+  "description": "DSH desktop plugin: AnySearch provider with rotating API keys on HTTP 402.",
+  "type": "module",
+  "main": "lib/index.js",
+  "exports": {
+    ".": "./lib/index.js"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  }
+}

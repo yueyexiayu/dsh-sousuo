@@ -1,0 +1,3 @@
+# Copy this file to "keys" in the same directory, then put one AnySearch API key per line.
+# chmod 600 keys
+# Lines starting with # are ignored.
