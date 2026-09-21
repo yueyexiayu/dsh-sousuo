@@ -6,8 +6,10 @@ import {
   withSearchFollowthrough,
 } from "../lib/followthrough.js";
 
-test("followthrough section tells the model to use web_search and not stop on reasoning", () => {
+test("followthrough section routes vague search to sousuo and explicit URLs to Firecrawl", () => {
   assert.match(SEARCH_FOLLOWTHROUGH_SECTION, /web_search/);
+  assert.match(SEARCH_FOLLOWTHROUGH_SECTION, /mcp__firecrawl__firecrawl_scrape/);
+  assert.match(SEARCH_FOLLOWTHROUGH_SECTION, /Do not use web_fetch/);
   assert.match(SEARCH_FOLLOWTHROUGH_SECTION, /only reasoning/);
   assert.match(SEARCH_FOLLOWTHROUGH_SECTION, /Do not call anysearch_capabilities/);
 });
