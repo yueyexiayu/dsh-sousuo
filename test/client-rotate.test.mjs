@@ -75,6 +75,66 @@ test("one request stops after a full lap of 402", async () => {
   }
 });
 
+test("fetch failed on first attempt retries the same key", async () => {
+  const dir = await mkdtemp(path.join(os.tmpdir(), "sousuo-"));
+  await writeFile(path.join(dir, "keys"), "k1\nk2\n", { mode: 0o600 });
+  const pool = new KeyPool({
+    keysPath: path.join(dir, "keys"),
+    statePath: path.join(dir, "state.json"),
+  });
+  let calls = 0;
+  const client = new AnySearchClient({
+    pool,
+    baseURL: "https://api.anysearch.com",
+    transportHooks: {
+      retryDelayMs: 0,
+      extraAttempts: 1,
+      fetch: async () => {
+        calls += 1;
+        if (calls === 1) throw new TypeError("fetch failed");
+        return okSearch();
+      },
+      resolveFallbackAddresses: async () => {
+        throw new Error("fallback should not run");
+      },
+    },
+  });
+  const result = await client.search({ query: "test" });
+  assert.equal(result.results[0].url, "https://example.com/");
+  assert.equal(calls, 2);
+  assert.equal((await pool.current()).index, 0);
+});
+
+test("exhausted fetch failed surfaces the network cause", async () => {
+  const dir = await mkdtemp(path.join(os.tmpdir(), "sousuo-"));
+  await writeFile(path.join(dir, "keys"), "k1\n", { mode: 0o600 });
+  const pool = new KeyPool({
+    keysPath: path.join(dir, "keys"),
+    statePath: path.join(dir, "state.json"),
+  });
+  const failure = new TypeError("fetch failed");
+  failure.cause = { code: "ECONNRESET", address: "179.255.102.224" };
+  const client = new AnySearchClient({
+    pool,
+    baseURL: "https://api.anysearch.com",
+    transportHooks: {
+      retryDelayMs: 0,
+      extraAttempts: 1,
+      fetch: async () => {
+        throw failure;
+      },
+      resolveFallbackAddresses: async () => [],
+    },
+  });
+  await assert.rejects(
+    () => client.search({ query: "test" }),
+    (error) => error instanceof AnySearchClientError
+      && error.message.includes("TypeError: fetch failed")
+      && error.message.includes("ECONNRESET")
+      && error.message.includes("179.255.102.224"),
+  );
+});
+
 test("401 does not rotate", async () => {
   const dir = await mkdtemp(path.join(os.tmpdir(), "sousuo-"));
   await writeFile(path.join(dir, "keys"), "k1\nk2\n", { mode: 0o600 });
