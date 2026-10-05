@@ -1,18 +1,31 @@
 /** Shared HTTP client for every AnySearch provider and tool operation. */
-import type { AnySearchDomainsResponse, AnySearchExtractRequest, AnySearchExtractResponse, AnySearchSearchRequest, AnySearchSearchResponse, AnySearchSubDomainsResponse } from './types.ts';
-export { ANYSEARCH_DSH_CLIENT_ID } from './version.ts';
+import type { AnySearchDomainsResponse, AnySearchExtractRequest, AnySearchExtractResponse, AnySearchSearchRequest, AnySearchSearchResponse, AnySearchSubDomainsResponse } from './types.js';
+export { ANYSEARCH_DSH_CLIENT_ID } from './version.js';
 /** Public AnySearch API origin. */
 export declare const ANYSEARCH_DEFAULT_BASE_URL = "https://api.anysearch.com";
 /** AnySearch operation names retained in safe diagnostics. */
 export type AnySearchOperation = 'search' | 'extract' | 'domains' | 'sub_domains';
-/** Resolved AnySearch client configuration. */
+/** Minimal rotating-key contract consumed by the HTTP client. */
+export interface AnySearchKeyPool {
+    current(): Promise<{ key: string; index: number; count: number }>;
+    advance(expectedIndex: number): Promise<unknown>;
+}
+/** Optional transport substitutions accepted by fetchWithFailover. */
+export interface AnySearchTransportHooks {
+    fetch?: typeof globalThis.fetch;
+    dohFetch?: typeof globalThis.fetch;
+    extraAttempts?: number;
+    retryDelayMs?: number;
+    resolveFallbackAddresses?: (hostname: string, fetchImpl: typeof globalThis.fetch, signal?: AbortSignal) => Promise<readonly string[]>;
+    pinnedFetch?: (url: string, init: RequestInit, address: string) => Promise<Response>;
+}
+/** Resolved configuration for the rotating-key HTTP client. */
 export interface AnySearchClientOptions {
-    /** Resolve the API key for one operation; `undefined` uses anonymous access. */
-    resolveApiKey: () => Promise<string | undefined>;
-    /** Credential reference whose literal value must never be sent as an API key. */
-    apiKeyReference?: string;
+    /** Rotating local credentials, loaded independently for each operation. */
+    pool: AnySearchKeyPool;
     /** API base URL; public paths are appended to its pathname. */
     baseURL: string;
+    transportHooks?: AnySearchTransportHooks;
 }
 /** Safe HTTP and credential failure surfaced by the shared client. */
 export declare class AnySearchClientError extends Error {
@@ -23,10 +36,10 @@ export declare class AnySearchClientError extends Error {
     /** Upstream HTTP status when a response arrived. */
     readonly httpStatus?: number;
     /** Authentication mode used for an upstream response. */
-    readonly authentication?: 'anonymous' | 'credential';
+    readonly authentication?: 'credential';
     /** AnySearch request id when the response supplied one. */
     readonly requestId?: string;
-    /** Upstream retry delay retained for diagnostics; the client never retries. */
+    /** Upstream retry delay retained for diagnostics. */
     readonly retryAfter?: string;
     /** Stable AnySearch business error code when the response supplied one. */
     readonly errorCode?: string;
@@ -34,7 +47,7 @@ export declare class AnySearchClientError extends Error {
         kind?: 'aborted' | 'provider';
         operation: AnySearchOperation;
         httpStatus?: number;
-        authentication?: 'anonymous' | 'credential';
+        authentication?: 'credential';
         requestId?: string;
         retryAfter?: string;
         errorCode?: string;
@@ -56,5 +69,6 @@ export declare class AnySearchClient {
     /** Read detailed capabilities for the supplied ordered domain names. */
     getSubDomains(domains: readonly string[], signal?: AbortSignal): Promise<AnySearchSubDomainsResponse>;
     private request;
-    private resolveApiKey;
+    private requestWithPool;
+    private requestOnce;
 }

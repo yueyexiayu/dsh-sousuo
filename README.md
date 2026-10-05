@@ -45,16 +45,22 @@ chmod 600 keys
 
 用编辑器把真实 Key 写进 `keys`，不要贴到聊天里。当前序号记在同目录 `state.json`（同样不进 Git）。
 
+`state.json` 不存在时自动初始化。文件无法读取、JSON 损坏或序号格式错误时会明确报错并保留原文件，不会静默重置；请先检查、修复状态文件，再重试。
+
 ## 说明
 
 - 仓库不含本机 patch、账号、Key 或 `state.json`
 - 后端是 AnySearch；本插件只做 Provider 适配、402 轮换，以及搜完必须作答的系统提示
+- `web_search` / `web_fetch` 由官方 `tool-web` 注册并控制开关；插件只提供 AnySearch provider，不会把关闭的 `web_fetch` 重新开启
+- DNS 直连支持响应断流、取消和空响应；公共 UDP DNS 查询最多使用 2.5 秒，停止操作会取消查询
 - `advancedTools` 默认关闭；打开后才会注册 `anysearch_*` 工具
 - 测试里的 `k1` / `k2` 是假值，不是真实凭据
 
 ## 开发
 
 ```bash
-node --check lib/config.js lib/followthrough.js lib/client.js lib/keys.js lib/provider.js
-node --test
+for file in lib/*.js lib/tools/*.js; do node --check "$file" || exit; done
+node --test test/*.test.mjs
 ```
+
+测试使用假 Key 和本机 HTTP/UDP 服务，覆盖密钥轮换、损坏状态文件不被覆写、响应断流、取消、空响应和 DNS 时限，不请求真实 AnySearch API。修改后同步 desktop profile 中的加载副本，并完全退出 DeepSeek Harness（⌘Q）再打开。
