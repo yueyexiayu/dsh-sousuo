@@ -25,6 +25,8 @@ export interface AnySearchMetadata {
 export interface AnySearchSearchResponse {
     requestId?: string;
     results: AnySearchResult[];
+    /** True when the client capped cleaned content before rendering. */
+    contentTruncated: boolean;
     metadata: AnySearchMetadata;
 }
 /** Extract request accepted by the shared AnySearch HTTP client. */

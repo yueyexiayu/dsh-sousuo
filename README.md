@@ -53,6 +53,9 @@ chmod 600 keys
 - 后端是 AnySearch；本插件只做 Provider 适配、402 轮换，以及搜完必须作答的系统提示
 - `web_search` / `web_fetch` 由官方 `tool-web` 注册并控制开关；插件只提供 AnySearch provider，不会把关闭的 `web_fetch` 重新开启
 - DNS 直连支持响应断流、取消和空响应；公共 UDP DNS 查询最多使用 2.5 秒，停止操作会取消查询
+- 系统请求的正文断流同样进入重试和 IPv4 fallback；真正的 JSON 格式错误不重试。连接、正文读取和 DNS fallback 共用当前 HTTP 请求的 55 秒时限，取消会停止后续尝试
+- 502 / 503 / 504 重试前释放旧响应；取消或失败退出时也会释放仍持有的旧响应。最终返回的错误响应仍可读取正文
+- 高级搜索和批量搜索会同时报告客户端 20 万字符内容上限与渲染上限造成的截断；未请求正文时不会报告正文截断
 - `advancedTools` 默认关闭；打开后才会注册 `anysearch_*` 工具
 - 测试里的 `k1` / `k2` 是假值，不是真实凭据
 
@@ -63,4 +66,4 @@ for file in lib/*.js lib/tools/*.js; do node --check "$file" || exit; done
 node --test test/*.test.mjs
 ```
 
-测试使用假 Key 和本机 HTTP/UDP 服务，覆盖密钥轮换、损坏状态文件不被覆写、响应断流、取消、空响应和 DNS 时限，不请求真实 AnySearch API。修改后同步 desktop profile 中的加载副本，并完全退出 DeepSeek Harness（⌘Q）再打开。
+测试使用假 Key 和本机 HTTP/UDP 服务，覆盖密钥轮换、损坏状态文件不被覆写、旧响应释放、正文断流重试、取消、空响应、DNS 时限与内容截断标记，不请求真实 AnySearch API。修改后同步 desktop profile 中的加载副本，并完全退出 DeepSeek Harness（⌘Q）再打开。
