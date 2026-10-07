@@ -35,6 +35,7 @@ function poolFixture() {
   let rotations = 0;
   return {
     current: async () => ({ key: `fixture-key-${index}`, index, count: 2 }),
+    snapshot: async () => [index, (index + 1) % 2].map(n => ({ key: `fixture-key-${n}`, index: n, count: 2 })),
     advance: async (previous) => {
       assert.equal(previous, index);
       index = (index + 1) % 2;
@@ -45,7 +46,7 @@ function poolFixture() {
 }
 
 function client(baseURL, pool, transportHooks = {}) {
-  return new AnySearchClient({ baseURL, pool, transportHooks: { extraAttempts: 1, retryDelayMs: 0, ...transportHooks } });
+  return new AnySearchClient({ baseURL, pool, transportHooks: { proxyPolicy: 'direct', extraAttempts: 1, retryDelayMs: 0, ...transportHooks } });
 }
 
 for (const status of [401, 429]) {

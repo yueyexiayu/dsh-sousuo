@@ -35,6 +35,7 @@ test("fetchWithFailover retries a TypeError then succeeds", async () => {
   const calls = [];
   const response = jsonResponse(200, { ok: true });
   const result = await fetchWithFailover("https://api.anysearch.com/v1/search", { method: "POST" }, {
+    proxyPolicy: "direct",
     retryDelayMs: 0,
     extraAttempts: 1,
     fetch: async () => {
@@ -54,6 +55,7 @@ test("fetchWithFailover pins public-DNS IPs after system fetch keeps failing", a
   const calls = [];
   const pinned = jsonResponse(200, { ok: true });
   const result = await fetchWithFailover("https://api.anysearch.com/v1/search", { method: "POST" }, {
+    proxyPolicy: "direct",
     retryDelayMs: 0,
     extraAttempts: 1,
     fetch: async () => {
@@ -83,6 +85,7 @@ test("fetchWithFailover pins public-DNS IPs after system fetch keeps failing", a
 test("fetchWithFailover retries HTTP 503 then returns success", async () => {
   const statuses = [];
   const result = await fetchWithFailover("https://api.anysearch.com/v1/search", { method: "GET" }, {
+    proxyPolicy: "direct",
     retryDelayMs: 0,
     extraAttempts: 1,
     fetch: async () => {
@@ -104,6 +107,7 @@ test("fetchWithFailover does not retry a redirect TypeError", async () => {
   redirected.cause = { code: "UND_ERR_RESPONSE_REDIRECTED" };
   await assert.rejects(
     () => fetchWithFailover("https://api.anysearch.com/v1/search", { method: "POST" }, {
+      proxyPolicy: "direct",
       retryDelayMs: 0,
       fetch: async () => {
         calls += 1;
@@ -138,6 +142,7 @@ test("pinnedHttpsFetch connects by overridden lookup", async () => {
       `http://anysearch.test:${port}/v1/search`,
       { method: "POST", headers: { accept: "application/json" }, body: "{}" },
       "127.0.0.1",
+      { proxyPolicy: "direct" },
     );
     assert.equal(response.status, 200);
     const body = await response.json();

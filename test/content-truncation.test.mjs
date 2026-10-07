@@ -18,7 +18,7 @@ hooks.deregister();
 
 function clientFor(lengths) {
   return new AnySearchClient({
-    pool: { current: async () => ({ key: "fixture-key", index: 0, count: 1 }) },
+    pool: { snapshot: async () => [{ key: "fixture-key", index: 0, count: 1 }] },
     baseURL: "https://anysearch.test",
     transportHooks: {
       fetch: async () => new Response(JSON.stringify({

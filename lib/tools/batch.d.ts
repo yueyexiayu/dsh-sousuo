@@ -1,8 +1,8 @@
 /** Model-facing bounded fanout over independent AnySearch search requests. */
 import type { Context } from '@deepseek-ai/cordis';
 import type { JsonValue } from '@deepseek-ai/dsh-tools';
-import type { AnySearchClient } from '../client.ts';
-import type { AnySearchMetadata, AnySearchResult, AnySearchSearchRequest } from '../types.ts';
+import type { AnySearchClient } from '../client.js';
+import type { AnySearchMetadata, AnySearchResult, AnySearchSearchRequest } from '../types.js';
 /** Stable model-facing name for bounded client-side search fanout. */
 export declare const ANYSEARCH_BATCH_SEARCH_TOOL_NAME = "anysearch_batch_search";
 /** Maximum independent HTTP requests accepted by one batch operation. */

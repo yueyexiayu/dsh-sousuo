@@ -3,7 +3,8 @@ import assert from "node:assert/strict";
 import http from "node:http";
 import dgram from "node:dgram";
 import { Resolver } from "node:dns/promises";
-import { pinnedHttpsFetch, resolveFallbackAddresses } from "../lib/transport.js";
+import { pinnedHttpsFetch as rawPinnedFetch, resolveFallbackAddresses } from "../lib/transport.js";
+const pinnedHttpsFetch = (url, init, address) => rawPinnedFetch(url, init, address, { proxyPolicy: "direct" });
 
 async function bounded(promise, ms = 1000) {
   let timer;
@@ -36,7 +37,7 @@ test("pinned transport rejects a truncated response instead of hanging", async (
     setTimeout(() => response.destroy(), 10);
   });
   await assert.rejects(
-    () => bounded(pinnedHttpsFetch(url, { method: "POST" }, "127.0.0.1")),
+    () => bounded(pinnedHttpsFetch(url, { method: "POST" }, "127.0.0.1").then(response => response.text())),
     error => error.code === "ECONNRESET",
   );
 });
@@ -50,7 +51,7 @@ test("pinned transport settles after cancellation during response reading", asyn
     responseStarted();
   });
   const controller = new AbortController();
-  const pending = pinnedHttpsFetch(url, { signal: controller.signal }, "127.0.0.1");
+  const pending = pinnedHttpsFetch(url, { signal: controller.signal }, "127.0.0.1").then(response => response.text());
   await bounded(started);
   controller.abort();
   await assert.rejects(() => bounded(pending), error => error.name === "AbortError");

@@ -27,6 +27,8 @@ export interface AnySearchSearchResponse {
     results: AnySearchResult[];
     /** True when the client capped cleaned content before rendering. */
     contentTruncated: boolean;
+    /** True when source count, title/snippet fields or oversized URLs were bounded. */
+    sourcesTruncated: boolean;
     metadata: AnySearchMetadata;
 }
 /** Extract request accepted by the shared AnySearch HTTP client. */

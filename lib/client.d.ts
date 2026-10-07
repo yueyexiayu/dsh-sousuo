@@ -7,7 +7,7 @@ export declare const ANYSEARCH_DEFAULT_BASE_URL = "https://api.anysearch.com";
 export type AnySearchOperation = 'search' | 'extract' | 'domains' | 'sub_domains';
 /** Minimal rotating-key contract consumed by the HTTP client. */
 export interface AnySearchKeyPool {
-    current(): Promise<{ key: string; index: number; count: number }>;
+    snapshot(): Promise<{ key: string; index: number; count: number }[]>;
     advance(expectedIndex: number): Promise<unknown>;
 }
 /** Optional transport substitutions accepted by fetchWithFailover. */
@@ -18,10 +18,12 @@ export interface AnySearchTransportHooks {
     retryDelayMs?: number;
     resolveFallbackAddresses?: (hostname: string, fetchImpl: typeof globalThis.fetch, signal?: AbortSignal) => Promise<readonly string[]>;
     pinnedFetch?: (url: string, init: RequestInit, address: string) => Promise<Response>;
+    /** Environment proxy policy is respected by default. Direct is for controlled test transports. */
+    proxyPolicy?: 'environment' | 'direct';
 }
 /** Resolved configuration for the rotating-key HTTP client. */
 export interface AnySearchClientOptions {
-    /** Rotating local credentials, loaded independently for each operation. */
+    /** Stable current-first candidate snapshot, loaded independently for each operation. */
     pool: AnySearchKeyPool;
     /** API base URL; public paths are appended to its pathname. */
     baseURL: string;
@@ -30,7 +32,7 @@ export interface AnySearchClientOptions {
 /** Safe HTTP and credential failure surfaced by the shared client. */
 export declare class AnySearchClientError extends Error {
     /** Failure category used by Harness adapters. */
-    readonly kind: 'aborted' | 'provider';
+    readonly kind: 'aborted' | 'provider' | 'timeout' | 'too_large';
     /** Operation that failed. */
     readonly operation: AnySearchOperation;
     /** Upstream HTTP status when a response arrived. */
@@ -44,7 +46,7 @@ export declare class AnySearchClientError extends Error {
     /** Stable AnySearch business error code when the response supplied one. */
     readonly errorCode?: string;
     constructor(message: string, options: {
-        kind?: 'aborted' | 'provider';
+        kind?: 'aborted' | 'provider' | 'timeout' | 'too_large';
         operation: AnySearchOperation;
         httpStatus?: number;
         authentication?: 'credential';
@@ -52,6 +54,8 @@ export declare class AnySearchClientError extends Error {
         retryAfter?: string;
         errorCode?: string;
         cause?: unknown;
+        /** Known outgoing credentials to remove from diagnostics and copied causes. */
+        secrets?: readonly string[];
     });
 }
 /** HTTP client shared by the native Provider and AnySearch-specific tools. */

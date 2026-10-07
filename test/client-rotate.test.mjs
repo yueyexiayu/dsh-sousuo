@@ -87,6 +87,7 @@ test("fetch failed on first attempt retries the same key", async () => {
     pool,
     baseURL: "https://api.anysearch.com",
     transportHooks: {
+      proxyPolicy: 'direct',
       retryDelayMs: 0,
       extraAttempts: 1,
       fetch: async () => {
@@ -118,6 +119,7 @@ test("exhausted fetch failed surfaces the network cause", async () => {
     pool,
     baseURL: "https://api.anysearch.com",
     transportHooks: {
+      proxyPolicy: 'direct',
       retryDelayMs: 0,
       extraAttempts: 1,
       fetch: async () => {

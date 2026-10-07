@@ -56,6 +56,7 @@ test("multiple system and pinned retries release old responses while the final e
   let systemCalls = 0;
   let pinnedCalls = 0;
   const response = await fetchWithFailover("https://fixture.invalid/v1/search", {}, {
+    proxyPolicy: 'direct',
     retryDelayMs: 0,
     extraAttempts: 1,
     fetch: async () => discarded[systemCalls++].response,
@@ -94,8 +95,8 @@ function interruptBody(t, response) {
 function client(baseURL, transportHooks = {}) {
   return new AnySearchClient({
     baseURL,
-    pool: { current: async () => ({ key: "fixture-only", index: 0, count: 1 }) },
-    transportHooks: { retryDelayMs: 0, extraAttempts: 1, ...transportHooks },
+    pool: { snapshot: async () => [{ key: "fixture-only", index: 0, count: 1 }] },
+    transportHooks: { proxyPolicy: 'direct', retryDelayMs: 0, extraAttempts: 1, ...transportHooks },
   });
 }
 
@@ -215,6 +216,7 @@ test("cancellation during DNS releases the retained HTTP error response", { time
   const started = new Promise(resolve => { lookupStarted = resolve; });
   let pinnedCalls = 0;
   const pending = fetchWithFailover("https://fixture.invalid/v1/search", { signal: controller.signal }, {
+    proxyPolicy: 'direct',
     extraAttempts: 0,
     fetch: async () => failed.response,
     resolveFallbackAddresses: async (_hostname, _fetch, signal) => {
