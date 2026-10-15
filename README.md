@@ -11,7 +11,10 @@ DeepSeek Harness 官方桌面端的搜索 Provider。`web_search` / `web_fetch` 
 ## 安装
 
 1. 复制本仓库到 `$DSH_HOME/plugins/sousuo`（默认 `$DSH_HOME` 为 `~/.dsh`）。
-2. 再复制一份到 `$DSH_HOME/profiles/desktop/node_modules/sousuo`（桌面端要从 profile 内加载，才能解析 DSH 的 `@deepseek-ai/*` 包）。
+2. 在 `$DSH_HOME/profiles/desktop/package.json` 的 `dependencies` 增加 `"sousuo": "file:../../plugins/sousuo"`，保留其他依赖及 `dsh.profile.bundles`。使用当前 DSH 随附的 pnpm 在该 profile 运行 `install --ignore-scripts`，并保留生成的 `pnpm-lock.yaml`。profile 的 `pnpm-workspace.yaml` 保持 `nodeLinker: hoisted`、`autoInstallPeers: false`。
+   - `file:` 将包安装为 profile 内的实体目录，保留原有官方依赖解析边界；不要用手工复制、未声明的目录或指向源码的 `link:` 替代。
+   - 包声明 `@deepseek-ai/dsh-web` / `@deepseek-ai/schemastery` 为 Host 提供的 peer；不另装一套官方 DSH runtime。打包白名单只包含代码、包声明和公开说明，不安装 `keys`、`state.json`、`.credentials.yaml` 或本地 `node_modules`。
+   - 本方案直接管理已声明的 `file:` 依赖，不另外运行 CLI 插件安装或把 sousuo 再加入 `dsh.profile.bundles`（下方用户 patch 已负责启用，避免自动 bundle 启用造成重复注册）。
 3. 在 `$DSH_HOME/profiles/desktop/cordis.patch.yml` 写入：
 
 ```yaml
@@ -68,12 +71,25 @@ chmod 600 keys
 
 ## 开发
 
+当前版本：`0.1.5`。源码唯一来源为 `$DSH_HOME/plugins/sousuo`；profile 中的安装由 `file:` 依赖和锁文件管理，不再手工复制。修改后同步递增 `package.json` 与 `lib/version.js`，再在 desktop profile 用当前 DSH 随附 pnpm 移除并重新添加此文件依赖，重新生成实体安装。普通 `install` / `update sousuo`（包括 `--force`）可能保留旧硬链接，不能保证原子替换或新增文件已同步。随后执行 offline frozen-lockfile 安装，核对安装包版本、全部 `lib/` 和公开包文件与源码一致。两步重装期间不要退出或重启 Host；必须在重新添加成功、入口存在后再重启。不要把 API Key 写入依赖或锁文件。
+
+例如（`PNPM_CLI` 指向当前安装 DSH 的 `Contents/Resources/runtime/primary-runtime/dependencies/pnpm/bin/pnpm.mjs`）：
+
+```bash
+set -e
+DSH_HOME=${DSH_HOME:-$HOME/.dsh}
+/usr/local/bin/node "${PNPM_CLI:?Set PNPM_CLI to the current bundled pnpm}" --dir "$DSH_HOME/profiles/desktop" remove sousuo --config.ignore-scripts=true
+/usr/local/bin/node "$PNPM_CLI" --dir "$DSH_HOME/profiles/desktop" add file:../../plugins/sousuo --offline --ignore-scripts
+/usr/local/bin/node "$PNPM_CLI" --dir "$DSH_HOME/profiles/desktop" install --offline --frozen-lockfile --ignore-scripts
+```
+
 先将当前官方桌面 bundle 解包到只读参考目录（根目录包含 `node_modules`），并设置 `DSH_OFFICIAL_REFERENCE`。原生契约测试直接导入该目录中的官方 `cordis`、`dsh-web` 和 `dsh-tool-web`；缺少参考目录时明确失败，不跳过、不使用模拟 renderer。
 
 ```bash
 export DSH_OFFICIAL_REFERENCE=/path/to/extracted-current-dsh
+export DSH_PROFILE_TEST_PNPM=/path/to/current-app/Contents/Resources/runtime/primary-runtime/dependencies/pnpm/bin/pnpm.mjs
 for file in lib/*.js lib/tools/*.js; do /usr/local/bin/node --check "$file" || exit; done
 /usr/local/bin/node --test test/*.test.mjs
 ```
 
-测试使用假 Key 和本机 HTTP/UDP/代理服务，覆盖并发候选轮换、控制字符与错误脱敏、写入/同步/rename 失败保留状态、代理与 NO_PROXY、旧响应/socket 释放、成功及错误状态正文断流、取消/时限、原始响应字节上限、危险 URL、`__proto__` 参数、搜索/批量/目录整体输出预算与真实截断标记，不请求真实 AnySearch API。原生搜索测试通过真实官方 WebRuntime 注册 provider，再调用官方工具的 `execute`、`output.render`、`presentationMeta` 和 `presentResult`，覆盖正常零结果、截断空结果、单/多查询声明去重、来源限额、原生渲染预算、错误和取消。它验证的是隔离契约，不代表运行中的 Host 已加载最新插件；修改后仍须同步 desktop profile 中的加载副本，并完全退出 DeepSeek Harness（⌘Q）再打开。
+测试使用假 Key 和本机 HTTP/UDP/代理服务，覆盖并发候选轮换、控制字符与错误脱敏、写入/同步/rename 失败保留状态、代理与 NO_PROXY、旧响应/socket 释放、成功及错误状态正文断流、取消/时限、原始响应字节上限、危险 URL、`__proto__` 参数、搜索/批量/目录整体输出预算与真实截断标记，不请求真实 AnySearch API。原生搜索测试通过真实官方 WebRuntime 注册 provider，再调用官方工具的 `execute`、`output.render`、`presentationMeta` 和 `presentResult`，覆盖正常零结果、截断空结果、单/多查询声明去重、来源限额、原生渲染预算、错误和取消。另有使用当前 bundled pnpm 的隔离回归，验证文件依赖安装、普通/frozen-lockfile 重装、源码同步及打包凭据排除。它们不代表运行中的 Host 已加载最新插件；修改后仍须通过上述移除并重新添加命令同步 desktop profile 中的安装，并完全退出 DeepSeek Harness（⌘Q）再打开，实测原生工具。
