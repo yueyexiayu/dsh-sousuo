@@ -1,6 +1,6 @@
 {
   "name": "sousuo",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "private": true,
   "description": "DSH desktop plugin: AnySearch provider with rotating API keys on HTTP 402.",
   "type": "module",
@@ -13,6 +13,7 @@
     "README.md"
   ],
   "peerDependencies": {
+    "@deepseek-ai/dsh-tools": "~0.2.1-alpha.2",
     "@deepseek-ai/dsh-web": "~0.2.1-alpha.2",
     "@deepseek-ai/schemastery": "~3.18.5-alpha.1"
   },
