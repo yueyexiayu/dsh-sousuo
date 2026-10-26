@@ -1,6 +1,32 @@
-# sousuo
+<div align="center">
+<img src="docs/repo-assets/hero.svg" width="100%" alt="AnySearch provider、有限 Key 轮换和原生搜索结果的原创示意，非搜索截图" />
+<h1>sousuo · 搜索之后，给出答案</h1>
+<p><strong>原生 web_search / web_fetch，AnySearch 后端与有界 402 轮换。</strong></p>
+<p><strong>简体中文</strong> · <a href="README.en.md">English</a></p>
+<p><a href="package.json">v0.1.6</a> · <a href="LICENSE">MIT</a> · DSH desktop provider</p>
+<p><a href="#核心能力">核心能力</a> · <a href="#工作方式">工作方式</a> · <a href="#安装">安装</a> · <a href="#key-文件">Key文件</a> · <a href="#说明">边界</a> · <a href="#开发">开发</a></p>
+</div>
 
-当前项目是深度适配个人使用，项目只是给大家提供思路和借鉴，尽量不要直接照搬。
+---
+
+个人桌面工作流的参考实现，使用前核对自己的官方 Host 版本与配置，不建议直接照搬。**Key 只放本机私有文件，不进入 patch、Git 或对话。**
+
+## 核心能力
+
+<table><tr>
+<td width="33%"><strong>🔎 官方原生工具</strong><br/><br/>提供AnySearch provider，沿用官方web工具开关、渲染和错误语义。</td>
+<td width="33%"><strong>🔄 仅402轮换</strong><br/><br/>本次候选快照最多一轮；401/403/429不换Key，不把异常当空结果。</td>
+<td width="33%"><strong>🌐 受约束联网</strong><br/><br/>系统重试与受检IPv4 fallback共享55秒预算，不绕代理发送凭据。</td>
+</tr><tr>
+<td><strong>🛡 私有状态</strong><br/><br/>Key校验不回显，0600暂存原子保存；坏状态保留并明确报错。</td>
+<td><strong>📏 有界结果</strong><br/><br/>响应字节、来源URL与模型正文都有上限，实际截断可见。</td>
+<td><strong>🧭 简洁默认工具面</strong><br/><br/>默认只用原生搜索；确需垂直tag才显式开启anysearch_*工具。</td>
+</tr></table>
+
+## 工作方式
+
+![官方Web工具将请求交给provider，按本轮Key候选请求AnySearch，处理失败或有界结果后回到官方呈现。](docs/repo-assets/workflow.zh-CN.svg)
+
 
 DeepSeek Harness 官方桌面端的搜索 Provider。`web_search` / `web_fetch` 仍走 AnySearch HTTP API；本地用多把 API Key，遇到 HTTP 402 时立刻换下一把并重试同一请求。一次请求最多转一圈，然后失败。401 / 403 / 429 不换号。连不上 API 的 `TypeError: fetch failed` 会先按系统 DNS 再试一次，仍失败且目标无需环境代理时，才用公共 DNS/DoH 解析到的 IPv4 直连（SNI 仍是请求主机名），避免本机缓存到失效 GTM 节点时整次搜索直接失败。配置 `HTTP_PROXY` / `HTTPS_PROXY` / `ALL_PROXY` 时保留系统代理路径，绝不绕代理发送凭据；`NO_PROXY` 仅对能安全确认的常用规则启用直连，其他规则只会停用 fallback。
 
@@ -95,3 +121,14 @@ for file in lib/*.js lib/tools/*.js; do /usr/local/bin/node --check "$file" || e
 ```
 
 测试使用假 Key 和本机 HTTP/UDP/代理服务，覆盖并发候选轮换、控制字符与错误脱敏、写入/同步/rename 失败保留状态、代理与 NO_PROXY、旧响应/socket 释放、成功及错误状态正文断流、取消/时限、原始响应字节上限、危险 URL、`__proto__` 参数、搜索/批量/目录整体输出预算与真实截断标记，不请求真实 AnySearch API。原生搜索测试通过真实官方 WebRuntime 注册 provider，再调用官方工具的 `execute`、`output.render`、`presentationMeta` 和 `presentResult`，覆盖正常零结果、截断空结果、单/多查询声明去重、来源限额、原生渲染预算、错误和取消。另有使用当前 bundled pnpm 的隔离回归，验证文件依赖安装、普通/frozen-lockfile 重装、源码同步及打包凭据排除。它们不代表运行中的 Host 已加载最新插件；修改后仍须通过上述移除并重新添加命令同步 desktop profile 中的安装，并完全退出 DeepSeek Harness（⌘Q）再打开，实测原生工具。
+
+<details>
+<summary><strong>为什么不在401、403或429时换Key？</strong></summary>
+
+轮换仅处理明确的402额度语义，不把认证、权限或限流错误伪装成另一个账号的成功。一次请求只遍历自己的候选快照一轮；全部失败仍报错。
+
+</details>
+
+**本轮为文档更新：检查双语、图示、链接和桌面/手机排版；未重跑产品套件、重装profile、调用真实API或重启DSH。** [MIT License](LICENSE)。
+
+<div align="center"><sub>认真搜索，如实呈现结果。 · <a href="README.en.md">Read in English →</a></sub></div>
