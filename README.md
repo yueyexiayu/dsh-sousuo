@@ -71,7 +71,7 @@ chmod 600 keys
 
 ## 开发
 
-当前版本：`0.1.6`。源码唯一来源为 `$DSH_HOME/plugins/sousuo`；profile 中的安装由 `file:` 依赖和锁文件管理，不再手工复制。修改后同步递增 `package.json` 与 `lib/version.js`，再在 desktop profile 用当前 DSH 随附 pnpm 移除并重新添加此文件依赖，重新生成实体安装。普通 `install` / `update sousuo`（包括 `--force`）可能保留旧硬链接，不能保证原子替换或新增文件已同步。随后执行 offline frozen-lockfile 安装，核对安装包版本、全部 `lib/` 和公开包文件与源码一致。两步重装期间不要退出或重启 Host；必须在重新添加成功、入口存在后再重启。不要把 API Key 写入依赖或锁文件。
+当前版本：`0.1.7`。源码唯一来源为 `$DSH_HOME/plugins/sousuo`；profile 中的安装由 `file:` 依赖和锁文件管理，不再手工复制。修改后同步递增 `package.json` 与 `lib/version.js`，再在 desktop profile 用当前 DSH 随附 pnpm 移除并重新添加此文件依赖，重新生成实体安装。普通 `install` / `update sousuo`（包括 `--force`）可能保留旧硬链接，不能保证原子替换或新增文件已同步。随后执行 offline frozen-lockfile 安装，核对安装包版本、全部 `lib/` 和公开包文件与源码一致。两步重装期间不要退出或重启 Host；必须在重新添加成功、入口存在后再重启。不要把 API Key 写入依赖或锁文件。
 
 运行期由宿主提供 `@deepseek-ai/dsh-web`、`@deepseek-ai/dsh-tools` 与 `@deepseek-ai/schemastery`，`lib/` 直接 import 它们，因此都声明在 `peerDependencies` 里；插件不随包携带这些官方模块的副本，避免与宿主模块实例不一致（`instanceof` 与 service 身份都会受影响）。
 
