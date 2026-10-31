@@ -3,7 +3,7 @@
 <h1>sousuo · Search, then answer</h1>
 <p><strong>Native web_search/web_fetch, AnySearch and bounded HTTP402 key rotation.</strong></p>
 <p><a href="README.md">简体中文</a> · <strong>English</strong></p>
-<p><a href="package.json">v0.1.6</a> · <a href="LICENSE">MIT</a> · DSH desktop provider</p>
+<p><a href="package.json">v0.1.7</a> · <a href="LICENSE">MIT</a> · DSH desktop provider</p>
 <p><a href="#features">Features</a> · <a href="#how-it-works">How it works</a> · <a href="#installation">Installation</a> · <a href="#key-file">Key file</a> · <a href="#boundaries">Boundaries</a> · <a href="#development">Development</a></p>
 </div>
 
