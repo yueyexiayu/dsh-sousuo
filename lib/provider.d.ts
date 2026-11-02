@@ -12,7 +12,7 @@ export declare function mapAnySearchResponse(response: AnySearchSearchResponse):
 export declare class AnySearchProvider implements WebSearchProvider {
     private readonly client;
     readonly id = "sousuo";
-    constructor(client: AnySearchClient);
+    constructor(client: AnySearchClient, getDefaults?: () => Promise<{ maxResults: number | null }>);
     available(): boolean;
     search(request: WebSearchRequest, signal?: AbortSignal): Promise<WebSearchResult>;
 }

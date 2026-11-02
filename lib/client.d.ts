@@ -28,6 +28,7 @@ export interface AnySearchClientOptions {
     /** API base URL; public paths are appended to its pathname. */
     baseURL: string;
     transportHooks?: AnySearchTransportHooks;
+    getSearchDefaults?: () => Promise<{ maxResults: number | null; zone: 'auto' | 'cn' | 'intl'; language: string }>;
 }
 /** Safe HTTP and credential failure surfaced by the shared client. */
 export declare class AnySearchClientError extends Error {

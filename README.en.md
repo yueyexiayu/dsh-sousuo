@@ -3,7 +3,7 @@
 <h1>sousuo · Search, then answer</h1>
 <p><strong>Native web_search/web_fetch, AnySearch and bounded HTTP402 key rotation.</strong></p>
 <p><a href="README.md">简体中文</a> · <strong>English</strong></p>
-<p><a href="package.json">v0.1.7</a> · <a href="LICENSE">MIT</a> · DSH desktop provider</p>
+<p><a href="package.json">v0.1.8</a> · <a href="LICENSE">MIT</a> · DSH desktop provider</p>
 <p><a href="#features">Features</a> · <a href="#how-it-works">How it works</a> · <a href="#installation">Installation</a> · <a href="#key-file">Key file</a> · <a href="#boundaries">Boundaries</a> · <a href="#development">Development</a></p>
 </div>
 
@@ -28,6 +28,8 @@ A personal desktop-workflow reference: verify the official Host version/configur
 ![Official web tools call the provider, which uses a request-local key snapshot and returns errors or bounded AnySearch results to official presentation.](docs/repo-assets/workflow.en.svg)
 
 `web_search`/`web_fetch` use AnySearch HTTP, while official tool-web owns registration/toggles. This plugin never re-enables a disabled web_fetch. Advanced tools default off: exposing discovery/batch tools unnecessarily can encourage reasoning-only extra searching rather than a final answer. Enable advancedTools only when vertical tags are required.
+
+Under Plugins → Search, set default result count, region and language for subsequent searches. Explicit advanced-tool parameters take precedence; native results may still be limited by the official renderer. The page also shows the startup Host configuration read-only; changing Host configuration requires a full restart. Key contents remain in a private local file and are never shown.
 
 ## Installation
 
@@ -109,6 +111,6 @@ for file in lib/*.js lib/tools/*.js; do /usr/local/bin/node --check "$file" || e
 
 Fixtures use fake keys and local HTTP/UDP/proxy servers, never real AnySearch requests. They cover concurrency/state failures, proxy/DNS, cancellation, byte/output budgets, URLs, redaction, actual official WebRuntime tool execution/rendering and isolated bundled-pnpm file installation. They do not prove the running Host loaded updated code.
 
-**This update checks documentation, links, original artwork and desktop/mobile layout only. Product suites, profile reinstallation, real API calls and a DSH restart were not performed.** [MIT License](LICENSE).
+[MIT License](LICENSE).
 
 <div align="center"><sub>Search deliberately. Report errors honestly. · <a href="README.md">阅读中文版 →</a></sub></div>

@@ -36,7 +36,7 @@ test('file dependency stays installed across normal and frozen installs without 
     await Promise.all([mkdir(home, { recursive: true }), mkdir(source, { recursive: true }), mkdir(profile, { recursive: true })]);
     const manifest = JSON.parse(await readFile(path.join(sourceRoot, 'package.json'), 'utf8'));
     assert.equal(manifest.name, 'sousuo');
-    assert.deepEqual(manifest.files, ['lib/', 'cordis.patch.yml', 'keys.example', 'LICENSE', 'README.md']);
+    assert.deepEqual(manifest.files, ['lib/', 'locale/', 'cordis.patch.yml', 'keys.example', 'LICENSE', 'README.md']);
     await writeFile(path.join(source, 'package.json'), `${JSON.stringify(manifest, null, 2)}\n`);
     for (const input of manifest.files) {
       await cp(path.join(sourceRoot, input), path.join(source, input), { recursive: true });

@@ -3,7 +3,7 @@
 <h1>sousuo · 搜索之后，给出答案</h1>
 <p><strong>原生 web_search / web_fetch，AnySearch 后端与有界 402 轮换。</strong></p>
 <p><strong>简体中文</strong> · <a href="README.en.md">English</a></p>
-<p><a href="package.json">v0.1.7</a> · <a href="LICENSE">MIT</a> · DSH desktop provider</p>
+<p><a href="package.json">v0.1.8</a> · <a href="LICENSE">MIT</a> · DSH desktop provider</p>
 <p><a href="#核心能力">核心能力</a> · <a href="#工作方式">工作方式</a> · <a href="#安装">安装</a> · <a href="#key-文件">Key文件</a> · <a href="#说明">边界</a> · <a href="#开发">开发</a></p>
 </div>
 
@@ -31,6 +31,8 @@
 DeepSeek Harness 官方桌面端的搜索 Provider。`web_search` / `web_fetch` 仍走 AnySearch HTTP API；本地用多把 API Key，遇到 HTTP 402 时立刻换下一把并重试同一请求。一次请求最多转一圈，然后失败。401 / 403 / 429 不换号。连不上 API 的 `TypeError: fetch failed` 会先按系统 DNS 再试一次，仍失败且目标无需环境代理时，才用公共 DNS/DoH 解析到的 IPv4 直连（SNI 仍是请求主机名），避免本机缓存到失效 GTM 节点时整次搜索直接失败。配置 `HTTP_PROXY` / `HTTPS_PROXY` / `ALL_PROXY` 时保留系统代理路径，绝不绕代理发送凭据；`NO_PROXY` 仅对能安全确认的常用规则启用直连，其他规则只会停用 fallback。
 
 默认**不**向模型暴露 `anysearch_capabilities` / `anysearch_search` / `anysearch_batch_search`。Grok 等高推理模型看见这组工具后，容易先做能力发现、搜完只在思考里说「再搜一次」然后 `stop`，界面就像调用网络时自动停了。普通问题走 `web_search` 即可，后端已经是 sousuo。若确实需要垂直 tag，在 desktop patch 里给本插件加 `advancedTools: true`。
+
+在「插件 → 搜索」中可以设置默认结果数量、区域和语言，保存后用于后续搜索；高级工具显式参数优先，原生搜索的最终展示数量仍受官方限制。页面只读显示启动时的 Host 配置，修改 Host 配置需完全退出并重启。Key 内容不在页面显示，仍只存于本地私有文件。
 
 面向 **官方桌面**。不要把 Key 写进 patch、README、Git 或对话。
 
@@ -97,7 +99,7 @@ chmod 600 keys
 
 ## 开发
 
-当前版本：`0.1.7`。源码唯一来源为 `$DSH_HOME/plugins/sousuo`；profile 中的安装由 `file:` 依赖和锁文件管理，不再手工复制。修改后同步递增 `package.json` 与 `lib/version.js`，再在 desktop profile 用当前 DSH 随附 pnpm 移除并重新添加此文件依赖，重新生成实体安装。普通 `install` / `update sousuo`（包括 `--force`）可能保留旧硬链接，不能保证原子替换或新增文件已同步。随后执行 offline frozen-lockfile 安装，核对安装包版本、全部 `lib/` 和公开包文件与源码一致。两步重装期间不要退出或重启 Host；必须在重新添加成功、入口存在后再重启。不要把 API Key 写入依赖或锁文件。
+当前版本：`0.1.8`。源码唯一来源为 `$DSH_HOME/plugins/sousuo`；profile 中的安装由 `file:` 依赖和锁文件管理，不再手工复制。修改后同步递增 `package.json` 与 `lib/version.js`，再在 desktop profile 用当前 DSH 随附 pnpm 移除并重新添加此文件依赖，重新生成实体安装。普通 `install` / `update sousuo`（包括 `--force`）可能保留旧硬链接，不能保证原子替换或新增文件已同步。随后执行 offline frozen-lockfile 安装，核对安装包版本、全部 `lib/` 和公开包文件与源码一致。两步重装期间不要退出或重启 Host；必须在重新添加成功、入口存在后再重启。不要把 API Key 写入依赖或锁文件。
 
 运行期由宿主提供 `@deepseek-ai/dsh-web`、`@deepseek-ai/dsh-tools` 与 `@deepseek-ai/schemastery`，`lib/` 直接 import 它们，因此都声明在 `peerDependencies` 里；插件不随包携带这些官方模块的副本，避免与宿主模块实例不一致（`instanceof` 与 service 身份都会受影响）。
 
@@ -129,6 +131,6 @@ for file in lib/*.js lib/tools/*.js; do /usr/local/bin/node --check "$file" || e
 
 </details>
 
-**本轮为文档更新：检查双语、图示、链接和桌面/手机排版；未重跑产品套件、重装profile、调用真实API或重启DSH。** [MIT License](LICENSE)。
+[MIT License](LICENSE)。
 
 <div align="center"><sub>认真搜索，如实呈现结果。 · <a href="README.en.md">Read in English →</a></sub></div>
