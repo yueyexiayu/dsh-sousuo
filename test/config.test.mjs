@@ -22,3 +22,7 @@ test("non-boolean advancedTools stays off", () => {
   });
   assert.equal(resolved.advancedTools, false);
 });
+
+test("rejects plaintext endpoints that would expose credentials", () => {
+  assert.throws(() => resolveConfig({ baseURL: 'http://example.test' }), /HTTPS/);
+});

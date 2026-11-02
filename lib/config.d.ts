@@ -1,6 +1,6 @@
 /** AnySearch plugin configuration accepted by resolveConfig and apply. */
 export interface Config {
-    /** HTTP or HTTPS API base URL. Defaults to the public AnySearch API. */
+    /** HTTPS API base URL. Defaults to the public AnySearch API. */
     baseURL?: string;
     /** Local key file override for programmatic configuration. */
     keysPath?: string;

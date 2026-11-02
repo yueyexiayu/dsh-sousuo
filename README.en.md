@@ -3,7 +3,7 @@
 <h1>sousuo · Search, then answer</h1>
 <p><strong>Native web_search/web_fetch, AnySearch and bounded HTTP402 key rotation.</strong></p>
 <p><a href="README.md">简体中文</a> · <strong>English</strong></p>
-<p><a href="package.json">v0.1.8</a> · <a href="LICENSE">MIT</a> · DSH desktop provider</p>
+<p><a href="package.json">v0.1.9</a> · <a href="LICENSE">MIT</a> · DSH desktop provider</p>
 <p><a href="#features">Features</a> · <a href="#how-it-works">How it works</a> · <a href="#installation">Installation</a> · <a href="#key-file">Key file</a> · <a href="#boundaries">Boundaries</a> · <a href="#development">Development</a></p>
 </div>
 
@@ -29,7 +29,7 @@ A personal desktop-workflow reference: verify the official Host version/configur
 
 `web_search`/`web_fetch` use AnySearch HTTP, while official tool-web owns registration/toggles. This plugin never re-enables a disabled web_fetch. Advanced tools default off: exposing discovery/batch tools unnecessarily can encourage reasoning-only extra searching rather than a final answer. Enable advancedTools only when vertical tags are required.
 
-Under Plugins → Search, set default result count, region and language for subsequent searches. Explicit advanced-tool parameters take precedence; native results may still be limited by the official renderer. The page also shows the startup Host configuration read-only; changing Host configuration requires a full restart. Key contents remain in a private local file and are never shown.
+Under Plugins → Search, add or delete keys, view their count, explicitly test the connection, and set default result count, region and language. A connection test sends a real search and may incur charges. Keys are stored in a private local file and are not returned to the page. Explicit advanced-tool parameters take precedence; native results may still be limited by the official renderer. The advanced section shows startup Host configuration read-only; changing it requires a full restart. Host `baseURL` must use HTTPS to protect credentials.
 
 ## Installation
 

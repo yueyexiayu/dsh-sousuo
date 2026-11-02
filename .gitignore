@@ -1,6 +1,7 @@
 .DS_Store
 node_modules/
 keys
+keys.lock.sqlite*
 state.json
 .env
 .credentials.yaml

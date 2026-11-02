@@ -3,7 +3,7 @@
 <h1>sousuo · 搜索之后，给出答案</h1>
 <p><strong>原生 web_search / web_fetch，AnySearch 后端与有界 402 轮换。</strong></p>
 <p><strong>简体中文</strong> · <a href="README.en.md">English</a></p>
-<p><a href="package.json">v0.1.8</a> · <a href="LICENSE">MIT</a> · DSH desktop provider</p>
+<p><a href="package.json">v0.1.9</a> · <a href="LICENSE">MIT</a> · DSH desktop provider</p>
 <p><a href="#核心能力">核心能力</a> · <a href="#工作方式">工作方式</a> · <a href="#安装">安装</a> · <a href="#key-文件">Key文件</a> · <a href="#说明">边界</a> · <a href="#开发">开发</a></p>
 </div>
 
@@ -32,7 +32,7 @@ DeepSeek Harness 官方桌面端的搜索 Provider。`web_search` / `web_fetch` 
 
 默认**不**向模型暴露 `anysearch_capabilities` / `anysearch_search` / `anysearch_batch_search`。Grok 等高推理模型看见这组工具后，容易先做能力发现、搜完只在思考里说「再搜一次」然后 `stop`，界面就像调用网络时自动停了。普通问题走 `web_search` 即可，后端已经是 sousuo。若确实需要垂直 tag，在 desktop patch 里给本插件加 `advancedTools: true`。
 
-在「插件 → 搜索」中可以设置默认结果数量、区域和语言，保存后用于后续搜索；高级工具显式参数优先，原生搜索的最终展示数量仍受官方限制。页面只读显示启动时的 Host 配置，修改 Host 配置需完全退出并重启。Key 内容不在页面显示，仍只存于本地私有文件。
+在「插件 → 搜索」中可以添加和删除 Key、查看数量、主动测试连接，以及设置默认结果数量、区域和语言。测试连接会发送真实搜索请求，可能产生费用；Key 内容不回传页面，文件以私有权限保存。高级工具显式参数优先，原生搜索的最终展示数量仍受官方限制。高级配置区只读显示启动时的 Host 配置，修改 Host 配置需完全退出并重启。为保护凭据，Host 的 `baseURL` 必须使用 HTTPS。
 
 面向 **官方桌面**。不要把 Key 写进 patch、README、Git 或对话。
 
@@ -99,7 +99,7 @@ chmod 600 keys
 
 ## 开发
 
-当前版本：`0.1.8`。源码唯一来源为 `$DSH_HOME/plugins/sousuo`；profile 中的安装由 `file:` 依赖和锁文件管理，不再手工复制。修改后同步递增 `package.json` 与 `lib/version.js`，再在 desktop profile 用当前 DSH 随附 pnpm 移除并重新添加此文件依赖，重新生成实体安装。普通 `install` / `update sousuo`（包括 `--force`）可能保留旧硬链接，不能保证原子替换或新增文件已同步。随后执行 offline frozen-lockfile 安装，核对安装包版本、全部 `lib/` 和公开包文件与源码一致。两步重装期间不要退出或重启 Host；必须在重新添加成功、入口存在后再重启。不要把 API Key 写入依赖或锁文件。
+当前版本：`0.1.9`。源码唯一来源为 `$DSH_HOME/plugins/sousuo`；profile 中的安装由 `file:` 依赖和锁文件管理，不再手工复制。修改后同步递增 `package.json` 与 `lib/version.js`，再在 desktop profile 用当前 DSH 随附 pnpm 移除并重新添加此文件依赖，重新生成实体安装。普通 `install` / `update sousuo`（包括 `--force`）可能保留旧硬链接，不能保证原子替换或新增文件已同步。随后执行 offline frozen-lockfile 安装，核对安装包版本、全部 `lib/` 和公开包文件与源码一致。两步重装期间不要退出或重启 Host；必须在重新添加成功、入口存在后再重启。不要把 API Key 写入依赖或锁文件。
 
 运行期由宿主提供 `@deepseek-ai/dsh-web`、`@deepseek-ai/dsh-tools` 与 `@deepseek-ai/schemastery`，`lib/` 直接 import 它们，因此都声明在 `peerDependencies` 里；插件不随包携带这些官方模块的副本，避免与宿主模块实例不一致（`instanceof` 与 service 身份都会受影响）。
 
