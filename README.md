@@ -3,7 +3,7 @@
 <h1>sousuo · 搜索之后，给出答案</h1>
 <p><strong>原生 web_search / web_fetch，AnySearch 后端与有界 402 轮换。</strong></p>
 <p><strong>简体中文</strong> · <a href="README.en.md">English</a></p>
-<p><a href="package.json">v0.1.10</a> · <a href="LICENSE">MIT</a> · DSH desktop provider</p>
+<p><a href="package.json">v0.1.11</a> · <a href="LICENSE">MIT</a> · DSH desktop provider</p>
 <p><a href="#核心能力">核心能力</a> · <a href="#工作方式">工作方式</a> · <a href="#安装">安装</a> · <a href="#key-文件">Key文件</a> · <a href="#说明">边界</a> · <a href="#开发">开发</a></p>
 </div>
 
@@ -99,7 +99,7 @@ chmod 600 keys
 
 ## 开发
 
-当前版本：`0.1.10`。源码唯一来源为 `$DSH_HOME/plugins/sousuo`；profile 中的安装由 `file:` 依赖和锁文件管理，不再手工复制。修改后同步递增 `package.json` 与 `lib/version.js`，再在 desktop profile 用当前 DSH 随附 pnpm 移除并重新添加此文件依赖，重新生成实体安装。普通 `install` / `update sousuo`（包括 `--force`）可能保留旧硬链接，不能保证原子替换或新增文件已同步。随后执行 offline frozen-lockfile 安装，核对安装包版本、全部 `lib/` 和公开包文件与源码一致。两步重装期间不要退出或重启 Host；必须在重新添加成功、入口存在后再重启。不要把 API Key 写入依赖或锁文件。
+当前版本：`0.1.11`。源码唯一来源为 `$DSH_HOME/plugins/sousuo`；profile 中的安装由 `file:` 依赖和锁文件管理，不再手工复制。修改后同步递增 `package.json` 与 `lib/version.js`，再在 desktop profile 用当前 DSH 随附 pnpm 移除并重新添加此文件依赖，重新生成实体安装。普通 `install` / `update sousuo`（包括 `--force`）可能保留旧硬链接，不能保证原子替换或新增文件已同步。随后执行 offline frozen-lockfile 安装，核对安装包版本、全部 `lib/` 和公开包文件与源码一致。两步重装期间不要退出或重启 Host；必须在重新添加成功、入口存在后再重启。不要把 API Key 写入依赖或锁文件。
 
 运行期由宿主提供 `@deepseek-ai/dsh-web`、`@deepseek-ai/dsh-tools` 与 `@deepseek-ai/schemastery`，`lib/` 直接 import 它们，因此都声明在 `peerDependencies` 里；插件不随包携带这些官方模块的副本，避免与宿主模块实例不一致（`instanceof` 与 service 身份都会受影响）。
 
