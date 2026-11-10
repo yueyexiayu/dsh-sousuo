@@ -26,3 +26,9 @@ test("non-boolean advancedTools stays off", () => {
 test("rejects plaintext endpoints that would expose credentials", () => {
   assert.throws(() => resolveConfig({ baseURL: 'http://example.test' }), /HTTPS/);
 });
+
+test("custom key files keep rotation state beside the key file", () => {
+  const resolved = resolveConfig({ baseURL: "https://api.anysearch.com", keysPath: "/tmp/sousuo-fixture/keys" });
+  assert.equal(resolved.statePath, "/tmp/sousuo-fixture/state.json");
+  assert.equal(resolveConfig({ baseURL: "https://api.anysearch.com", keysPath: "/tmp/keys", statePath: "/var/tmp/rotation.json" }).statePath, "/var/tmp/rotation.json");
+});

@@ -84,6 +84,24 @@ test('official renderer owns the trust notice and renders escaped citation label
   assert(!('answer' in output.meta));
 });
 
+test('official renderer cannot escape a source link through URL parentheses', async () => {
+  const output = await run(officialSearch({ search: async () => ({ results: [{
+    title: 'Safe title', url: 'https://example.test/a)](https://evil.test)', snippet: 'safe',
+  }] }) }));
+  assert.equal(output.value.sources[0].url, 'https://example.test/a%29%5D%28https://evil.test%29');
+  assert.match(output.text, /https:\/\/example\.test\/a%29%5D%28https:\/\/evil\.test%29/u);
+  assert.doesNotMatch(output.text, /a\)\]\(https/u);
+});
+
+test('native projection omits a URL that grows past its display bound after escaping', async () => {
+  const output = await run(officialSearch({ search: async () => ({ results: [
+    { title: 'Bracketed', url: `https://example.test/${')'.repeat(2_000)}` },
+    { title: 'Safe', url: 'https://example.test/safe' },
+  ] }) }));
+  assert.deepEqual(output.value.sources.map(source => source.title), ['Safe']);
+  assert.equal(output.value.truncated, true);
+});
+
 test('official multi-query merge does not multiply provider safety statements', async () => {
   const output = await run(officialSearch({ search: async () => ({ results: [] }) }), ['one', 'two', 'three', 'four']);
   assertOneNotice(output.text);

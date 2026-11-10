@@ -4,6 +4,8 @@ export interface Config {
     baseURL?: string;
     /** Local key file override for programmatic configuration. */
     keysPath?: string;
+    /** Rotation-state path; defaults to state.json beside keysPath. */
+    statePath?: string;
     /** Aggregate content characters rendered by one advanced tool operation. */
     maxRenderedContentChars?: number;
     /** Register the three AnySearch-specific tools. Defaults to false. */
@@ -12,6 +14,7 @@ export interface Config {
 export interface ResolvedConfig {
     baseURL: string;
     keysPath: string;
+    statePath: string;
     maxRenderedContentChars: number;
     advancedTools: boolean;
 }

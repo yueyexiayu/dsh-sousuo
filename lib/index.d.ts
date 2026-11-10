@@ -4,7 +4,7 @@ import z from '@deepseek-ai/schemastery';
 import type { Config } from './config.js';
 export { resolveConfig } from './config.js';
 export type { Config, ResolvedConfig } from './config.js';
-export { SEARCH_FOLLOWTHROUGH_FOOTER, SEARCH_FOLLOWTHROUGH_SECTION } from './followthrough.js';
+export { buildSearchFollowthroughSection, SEARCH_FOLLOWTHROUGH_FOOTER, SEARCH_FOLLOWTHROUGH_SECTION } from './followthrough.js';
 /** Cordis plugin name used in loader diagnostics. */
 export declare const name = "sousuo";
 /** Capability seams required by the providers, prompt section, and advanced tools. */

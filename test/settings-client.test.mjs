@@ -45,10 +45,10 @@ test('loads defaults, saves explicit values with revision, and can clear them', 
 });
 
 test('shows read-only effective host configuration and explains native result limits', async () => {
-  const hostConfig = { baseURL: 'https://search.example/v1', keysPath: '/profile/keys', maxRenderedContentChars: 10000, advancedTools: false };
+  const hostConfig = { baseURL: 'https://search.example/v1', keysPath: '/profile/keys', statePath: '/profile/state.json', maxRenderedContentChars: 10000, advancedTools: false };
   const app = harness(call => ({ status: 200, body: { ok: true, settings: call.body?.settings ?? defaults, revision: 'r1', ...(call.method === 'GET' ? { hostConfig } : {}) } }));
   await app.settle();
-  for (const value of ['https://search.example/v1', '/profile/keys', '10000', '关闭']) assert.ok(app.text().includes(value), value);
+  for (const value of ['https://search.example/v1', '/profile/keys', '/profile/state.json', '10000', '关闭']) assert.ok(app.text().includes(value), value);
   assert.match(app.text(), /profile／Host 配置及其默认值.*重启/);
   assert.match(app.text(), /请求数量.*官方结果渲染限制/);
   await app.change('默认区域', 'cn'); await app.submit();

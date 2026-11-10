@@ -4,7 +4,7 @@ import { mkdtemp, writeFile, readFile, readdir, stat } from "node:fs/promises";
 import { promises as fs } from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { KeyPool, parseKeys } from "../lib/keys.js";
+import { KeyPool, MAX_KEY_BYTES, MAX_KEYS_FILE_BYTES, parseKeys } from "../lib/keys.js";
 
 test("parseKeys rejects control characters before trimming and never echoes the key", () => {
   for (const control of ["\u0000", "\u0001", "\t", "\r", "\u007f", "\u0085", "\u009f"]) {
@@ -166,6 +166,29 @@ test("bad persisted JSON and invalid indices remain explicit failures with no ov
 
 test("parseKeys skips blanks and comments", () => {
   assert.deepEqual(parseKeys("# a\n\nas_sk_one\n  as_sk_two  \n# b\n"), ["as_sk_one", "as_sk_two"]);
+});
+
+test("key loading enforces file privacy, byte bounds and per-key bounds without echoing secrets", async () => {
+  const dir = await mkdtemp(path.join(os.tmpdir(), "sousuo-key-limits-"));
+  const keysPath = path.join(dir, "keys");
+  await writeFile(keysPath, "fixture-secret\n", { mode: 0o644 });
+  await fs.chmod(keysPath, 0o644);
+  const pool = new KeyPool({ keysPath });
+  await assert.rejects(pool.current(), /must not be accessible by group or others/u);
+
+  await fs.chmod(keysPath, 0o600);
+  await writeFile(keysPath, `# oversized\n${'k'.repeat(MAX_KEYS_FILE_BYTES)}\n`, { mode: 0o600 });
+  await assert.rejects(pool.current(), new RegExp(`exceeds ${MAX_KEYS_FILE_BYTES} bytes`, 'u'));
+  await assert.rejects(async () => parseKeys(`k${'x'.repeat(MAX_KEY_BYTES)}\n`), /exceeds 4096 bytes/u);
+});
+
+test("custom key paths default rotation state beside the key file", async () => {
+  const dir = await mkdtemp(path.join(os.tmpdir(), "sousuo-derived-state-"));
+  const keysPath = path.join(dir, "custom-keys");
+  await writeFile(keysPath, "k1\n", { mode: 0o600 });
+  const pool = new KeyPool({ keysPath });
+  assert.deepEqual(await pool.current(), { key: "k1", index: 0, count: 1 });
+  assert.deepEqual(JSON.parse(await readFile(path.join(dir, "state.json"), "utf8")), { index: 0 });
 });
 
 test("pool cycles on 402 and stops after one lap", async () => {

@@ -3,7 +3,7 @@
 <h1>sousuo · Search, then answer</h1>
 <p><strong>Native web_search/web_fetch, AnySearch and bounded HTTP402 key rotation.</strong></p>
 <p><a href="README.md">简体中文</a> · <strong>English</strong></p>
-<p><a href="package.json">v0.1.12</a> · <a href="LICENSE">MIT</a> · DSH desktop provider</p>
+<p><a href="package.json">v0.1.13</a> · <a href="LICENSE">MIT</a> · DSH desktop provider</p>
 <p><a href="#features">Features</a> · <a href="#how-it-works">How it works</a> · <a href="#installation">Installation</a> · <a href="#key-file">Key file</a> · <a href="#boundaries">Boundaries</a> · <a href="#development">Development</a></p>
 </div>
 
@@ -34,16 +34,15 @@ Under Plugins → Search, add or delete keys, view their count, explicitly test 
 ## Installation
 
 1. Clone/copy into `$DSH_HOME/plugins/sousuo` (`DSH_HOME` defaults to `~/.dsh`).
-2. In desktop profile package.json, add dependency `"sousuo": "file:../../plugins/sousuo"`, retaining other dependencies and dsh.profile.bundles. Run the **current installed DSH's bundled pnpm** in that profile with `install --ignore-scripts`; retain its lockfile and workspace `nodeLinker: hoisted`, `autoInstallPeers: false`.
-3. Merge this desktop patch:
+2. In desktop profile package.json, add dependency `"sousuo": "file:../../plugins/sousuo"` and add `sousuo` to `dsh.profile.bundles`. The package's `dsh.bundle.patch` inserts the plugin row; do not add a second `insert` in the profile.
+3. Run the **current installed DSH's bundled pnpm** in that profile with `install --ignore-scripts`; retain its lockfile and workspace `nodeLinker: hoisted`, `autoInstallPeers: false`. Depending on pnpm, `file:` may be materialized as a profile-local directory snapshot or a link to the source. Both use the package declaration and bundle row as source of truth; do not copy undeclared directories by hand.
+4. Modify only the existing bundle config in the desktop patch:
 
 ```yaml
-- insert:
-    - id: sousuo
-      name: ./node_modules/sousuo/lib/index.js
-      config:
-        baseURL: https://api.anysearch.com
-        # advancedTools: true   # 可选：重新暴露 anysearch_* 垂直搜索工具
+- id: sousuo
+  config:
+    baseURL: https://api.anysearch.com
+    # keysPath / statePath / advancedTools are optional
 
 - id: web
   config:
@@ -51,7 +50,7 @@ Under Plugins → Search, add or delete keys, view their count, explicitly test 
     fetchProvider: sousuo
 ```
 
-The web stanza replaces the whole web.config. Fully quit DSH with ⌘Q and reopen after configuration/installation is complete. file: creates a real profile-local package, not a source symlink/manual copy. Do not also use CLI plugin installation or add sousuo to dsh.profile.bundles: the explicit patch already enables it. Host peers dsh-web/dsh-tools/schemastery must resolve from the official Host, not a separately installed runtime. Package files exclude keys/state/credentials/local node_modules.
+The sousuo stanza modifies the row inserted by the profile bundle; do not add another insert with the same id. The web stanza replaces the whole web.config. Fully quit DSH with ⌘Q and reopen after configuration/installation is complete. Host peers dsh-web/dsh-tools/schemastery must resolve from the official Host, not a separately installed runtime. Package files exclude keys/state/credentials/local node_modules.
 
 ## Key file
 
@@ -66,7 +65,7 @@ cp keys.example keys
 chmod 600 keys
 ```
 
-Edit real keys locally, never in chat. C0/C1 controls are rejected before trim; errors expose line numbers, not keys. state.json records the current index. Each request captures a current-first candidate list, preventing concurrent rotations from skipping/repeating slots.
+Edit real keys locally, never in chat. The key file is limited to16 KiB with at most4 KiB per line; on POSIX systems it must not be group/other accessible, so use mode0600. C0/C1 controls are rejected before trim; errors expose line numbers, not keys. Rotation state defaults to state.json beside the key file, including custom keysPath values; statePath can override it. Each request captures a current-first candidate list, preventing concurrent rotations from skipping/repeating slots.
 
 State uses exclusive0600 temporary creation, complete write/fsync/close and atomic rename; write failures keep the old state and report an error. This is neither a cross-process lock nor guaranteed power-loss durability. Only missing state initializes; unreadable/corrupt JSON/invalid indices fail without silent reset. Repair explicitly before retrying.
 
@@ -79,7 +78,7 @@ State uses exclusive0600 temporary creation, complete write/fsync/close and atom
 - Connection/response-stream failures retry the same key through system DNS, then may use public DNS/DoH pinned IPv4 with original-host SNI. Genuine JSON syntax errors do not retry. Configured HTTP_PROXY/HTTPS_PROXY/ALL_PROXY preserve the proxy path; NO_PROXY permits direct fallback only for safely recognized common rules. Unsupported rules disable fallback rather than bypassing a proxy.
 - Connection, response reads and DNS share the request's55-second deadline. UDP DNS is capped at2.5 seconds and cancellable. Cancellation/timeout stops later attempts. Local fetch timeout maps to WEB_FETCH_TIMEOUT, oversize to WEB_FETCH_TOO_LARGE, cancellation to WEB_ABORTED, never empty success.
 - Every JSON response is limited to5,000,000 bytes before parsing, decoded bytes for system fetch. Pinned IPv4 requests require identity encoding; returned gzip/br fails without retry while preserving HTTP status. Error-body stream failures retain402/401/403/429 decisions.
-- Up to50 source URLs; title1,000, summary2,000, URL4,000 characters. Only absolute credential-free HTTP(S); overlong URLs are omitted, never retargeted. Diagnostics max256 and errors2,000 characters with candidate keys/causes redacted.
+- Up to50 source URLs; title1,000, summary2,000, URL4,000 characters. Only absolute credential-free HTTP(S); overlong URLs are omitted. Native Markdown percent-encodes square and round brackets in URLs so an upstream URL cannot truncate a link or forge another one. Diagnostics max256 and errors2,000 characters with candidate keys/causes redacted.
 - Advanced search/batch/catalog maxRenderedContentChars defaults to12,000 **across all model text**, including notices, citations and footer. Five batch items share it; tiny budgets show a truncation marker without broken citations. Native single-query projection reserves official rendering overhead within12,000; official multi-query aggregation limits total sources, not the entire call's characters.
 - The200,000-character client text limit, source clipping and final budgets report actual truncation; no-body requests do not invent body truncation. Catalog trimming preserves complete retained identifiers and explicit truncated status.
 - Official tool-web renders the native safety statement once; provider text does not impersonate an answer. Genuine zero results show No results found.; clipped-empty sources show No usable source URLs retained (source list truncated). Errors remain WEB_PROVIDER_ERROR/WEB_ABORTED.
@@ -88,16 +87,17 @@ State uses exclusive0600 temporary creation, complete write/fsync/close and atom
 
 ## Development
 
-Source is `$DSH_HOME/plugins/sousuo`; profile installation remains declared file: plus lockfile. For product changes, update package.json/lib/version.js, then remove/re-add using the installed DSH's bundled pnpm. Ordinary install/update/--force can retain stale hardlinks. Verify the installed version, all lib files and public package files before restarting; never stop the Host between removal and successful re-addition.
+Source is `$DSH_HOME/plugins/sousuo`; the profile installs it through file:, dsh.profile.bundles, and its lockfile. For product changes, update package.json, lib/version.js, and documentation versions, run the profile install, and verify node_modules/sousuo/lib/index.js plus all lib and public package files against source. If pnpm retained a stale directory snapshot, remove and re-add the file: dependency before installing again. With a link: lock entry, restart the Host to reload modules. Never put API keys in dependencies, bundle config, or lockfiles.
 
 PNPM_CLI must name the current App's `Contents/Resources/runtime/primary-runtime/dependencies/pnpm/bin/pnpm.mjs`:
 
 ```bash
-set -e
 DSH_HOME=${DSH_HOME:-$HOME/.dsh}
-/usr/local/bin/node "${PNPM_CLI:?Set PNPM_CLI to the current bundled pnpm}" --dir "$DSH_HOME/profiles/desktop" remove sousuo --config.ignore-scripts=true
+/usr/local/bin/node "${PNPM_CLI:?Set PNPM_CLI to the current bundled pnpm}" --dir "$DSH_HOME/profiles/desktop" install --offline --ignore-scripts
+
+# Only when a directory snapshot did not receive the source update:
+/usr/local/bin/node "$PNPM_CLI" --dir "$DSH_HOME/profiles/desktop" remove sousuo --config.ignore-scripts=true
 /usr/local/bin/node "$PNPM_CLI" --dir "$DSH_HOME/profiles/desktop" add file:../../plugins/sousuo --offline --ignore-scripts
-/usr/local/bin/node "$PNPM_CLI" --dir "$DSH_HOME/profiles/desktop" install --offline --frozen-lockfile --ignore-scripts
 ```
 
 Tests need a complete read-only extracted current official bundle with node_modules, not a mock renderer. Missing reference directories fail explicitly:

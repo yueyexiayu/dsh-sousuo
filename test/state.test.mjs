@@ -54,3 +54,11 @@ test("a valid stored index beyond a changed key list resets safely", async (t) =
   assert.equal((await pool.current()).index, 0);
   assert.deepEqual(JSON.parse(await readFile(statePath, "utf8")), { index: 0 });
 });
+
+test("oversized rotation state fails explicitly without overwrite", async (t) => {
+  const { pool, statePath } = await fixture(t);
+  const original = `{"index":0,"padding":"${'x'.repeat(17_000)}"}`;
+  await writeFile(statePath, original);
+  await assert.rejects(pool.snapshot(), /exceeds 16384 bytes/u);
+  assert.equal(await readFile(statePath, 'utf8'), original);
+});
